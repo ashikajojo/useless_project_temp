@@ -1,1 +1,361 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
+    <title>Useless Bubble Counter 🫧</title>
+
+    <!-- OpenCV -->
+    <script async src="https://docs.opencv.org/4.x/opencv.js"></script>
+
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #dff6ff, #ffffff);
+            min-height: 100vh;
+            color: #17324d;
+        }
+
+        header {
+            text-align: center;
+            padding: 35px 20px 20px;
+        }
+
+        header h1 {
+            font-size: 42px;
+            margin-bottom: 10px;
+        }
+
+        header p {
+            font-size: 17px;
+            color: #587083;
+        }
+
+        .container {
+            width: 90%;
+            max-width: 1000px;
+            margin: 20px auto;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+            text-align: center;
+        }
+
+        .upload-box {
+            border: 3px dashed #6bc5e8;
+            border-radius: 18px;
+            padding: 40px 20px;
+            margin-bottom: 25px;
+        }
+
+        .upload-box h2 {
+            margin-bottom: 10px;
+        }
+
+        .upload-box p {
+            color: #718696;
+            margin-bottom: 20px;
+        }
+
+        input[type="file"] {
+            display: none;
+        }
+
+        .upload-btn {
+            display: inline-block;
+            background: #39a9dc;
+            color: white;
+            padding: 13px 25px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .upload-btn:hover {
+            background: #218bbd;
+        }
+
+        .result {
+            display: none;
+            margin-top: 25px;
+        }
+
+        .count {
+            font-size: 70px;
+            font-weight: bold;
+            color: #1597c9;
+            margin: 15px 0;
+        }
+
+        .count-text {
+            font-size: 20px;
+        }
+
+        canvas {
+            max-width: 100%;
+            border-radius: 15px;
+            margin-top: 20px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        }
+
+        .loading {
+            display: none;
+            margin: 20px;
+            font-weight: bold;
+        }
+
+        .funny {
+            margin-top: 25px;
+            font-style: italic;
+            color: #7a8c99;
+        }
+
+        footer {
+            text-align: center;
+            padding: 30px;
+            color: #82919b;
+        }
+    </style>
+</head>
+
+<body>
+
+    <header>
+        <h1>🫧 Useless Bubble Counter</h1>
+        <p>Because someone had to count the bubbles.</p>
+    </header>
+
+    <div class="container">
+
+        <div class="card">
+
+            <div class="upload-box">
+                <h2>🔬 Analyze Your Soap Foam</h2>
+
+                <p>
+                    Upload a picture of soap foam and let our
+                    extremely unnecessary technology count the bubbles.
+                </p>
+
+                <label for="imageInput" class="upload-btn">
+                    📷 Upload Foam Image
+                </label>
+
+                <input
+                    type="file"
+                    id="imageInput"
+                    accept="image/*"
+                >
+            </div>
+
+            <div class="loading" id="loading">
+                🫧 Counting bubbles... Please wait.
+            </div>
+
+            <div class="result" id="result">
+
+                <h2>Bubble Count</h2>
+
+                <div class="count" id="bubbleCount">
+                    0
+                </div>
+
+                <div class="count-text">
+                    bubbles detected 🫧
+                </div>
+
+                <canvas id="canvas"></canvas>
+
+                <p class="funny" id="message"></p>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <footer>
+        Made for absolutely no practical reason. 🫧
+    </footer>
+
+
+<script>
+
+const imageInput = document.getElementById("imageInput");
+const canvas = document.getElementById("canvas");
+const ctx = canvas.getContext("2d");
+
+imageInput.addEventListener("change", function(event) {
+
+    const file = event.target.files[0];
+
+    if (!file) {
+        return;
+    }
+
+    const image = new Image();
+
+    image.onload = function() {
+
+        document.getElementById("loading").style.display = "block";
+        document.getElementById("result").style.display = "none";
+
+        // Resize image
+        const maxWidth = 900;
+
+        let width = image.width;
+        let height = image.height;
+
+        if (width > maxWidth) {
+            height = height * maxWidth / width;
+            width = maxWidth;
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+
+        ctx.drawImage(image, 0, 0, width, height);
+
+        // Wait for OpenCV
+        setTimeout(() => {
+            countBubbles();
+        }, 1000);
+    };
+
+    image.src = URL.createObjectURL(file);
+});
+
+
+function countBubbles() {
+
+    try {
+
+        let src = cv.imread(canvas);
+
+        // Convert to grayscale
+        let gray = new cv.Mat();
+
+        cv.cvtColor(
+            src,
+            gray,
+            cv.COLOR_RGBA2GRAY
+        );
+
+        // Reduce noise
+        cv.GaussianBlur(
+            gray,
+            gray,
+            new cv.Size(9, 9),
+            2,
+            2,
+            cv.BORDER_DEFAULT
+        );
+
+        // Detect circles
+        let circles = new cv.Mat();
+
+        cv.HoughCircles(
+            gray,
+            circles,
+            cv.HOUGH_GRADIENT,
+            1,
+            15,
+            100,
+            25,
+            5,
+            100
+        );
+
+        let count = circles.cols;
+
+        // Draw detected circles
+        for (let i = 0; i < count; i++) {
+
+            let x = circles.data32F[i * 3];
+            let y = circles.data32F[i * 3 + 1];
+            let radius = circles.data32F[i * 3 + 2];
+
+            let center = new cv.Point(x, y);
+
+            cv.circle(
+                src,
+                center,
+                radius,
+                [0, 150, 255, 255],
+                2
+            );
+
+            cv.circle(
+                src,
+                center,
+                2,
+                [255, 0, 0, 255],
+                3
+            );
+        }
+
+        // Show processed image
+        cv.imshow(canvas, src);
+
+        document.getElementById("bubbleCount").innerText = count;
+
+        document.getElementById("message").innerText =
+            getFunnyMessage(count);
+
+        document.getElementById("loading").style.display = "none";
+
+        document.getElementById("result").style.display = "block";
+
+        src.delete();
+        gray.delete();
+        circles.delete();
+
+    } catch (error) {
+
+        console.error(error);
+
+        document.getElementById("loading").style.display = "none";
+
+        alert(
+            "Oops! The bubbles have defeated our highly unnecessary technology. 🫧"
+        );
+    }
+}
+
+
+function getFunnyMessage(count) {
+
+    if (count === 0) {
+        return "No bubbles detected. This foam has chosen peace.";
+    }
+
+    if (count < 20) {
+        return "A surprisingly small amount of useless information.";
+    }
+
+    if (count < 100) {
+        return "Congratulations. You now know how many bubbles exist.";
+    }
+
+    if (count < 500) {
+        return "That's a lot of bubbles for something nobody asked for.";
+    }
+
+    return "Excellent. You have officially counted an unreasonable number of bubbles. 🫧";
+}
+
+</script>
+
+</body>
+</html>
