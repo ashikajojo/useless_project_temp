@@ -7,7 +7,7 @@
     <title>Useless Bubble Counter 🫧</title>
 
     <!-- OpenCV -->
-    <script async src="https://docs.opencv.org/4.x/opencv.js"></script>
+    <script async id="opencv-script" src="https://docs.opencv.org/4.x/opencv.js"></script>
 
     <style>
         * {
@@ -80,6 +80,7 @@
             border-radius: 10px;
             cursor: pointer;
             font-weight: bold;
+            transition: background 0.2s ease;
         }
 
         .upload-btn:hover {
@@ -104,6 +105,7 @@
 
         canvas {
             max-width: 100%;
+            height: auto;
             border-radius: 15px;
             margin-top: 20px;
             box-shadow: 0 5px 20px rgba(0,0,0,0.1);
@@ -137,9 +139,7 @@
     </header>
 
     <div class="container">
-
         <div class="card">
-
             <div class="upload-box">
                 <h2>🔬 Analyze Your Soap Foam</h2>
 
@@ -152,11 +152,7 @@
                     📷 Upload Foam Image
                 </label>
 
-                <input
-                    type="file"
-                    id="imageInput"
-                    accept="image/*"
-                >
+                <input type="file" id="imageInput" accept="image/*">
             </div>
 
             <div class="loading" id="loading">
@@ -164,73 +160,65 @@
             </div>
 
             <div class="result" id="result">
-
                 <h2>Bubble Count</h2>
-
-                <div class="count" id="bubbleCount">
-                    0
-                </div>
-
-                <div class="count-text">
-                    bubbles detected 🫧
-                </div>
-
+                <div class="count" id="bubbleCount">0</div>
+                <div class="count-text">bubbles detected 🫧</div>
                 <canvas id="canvas"></canvas>
-
                 <p class="funny" id="message"></p>
-
             </div>
-
         </div>
-
     </div>
 
     <footer>
         Made for absolutely no practical reason. 🫧
     </footer>
 
-
 <script>
-
 const imageInput = document.getElementById("imageInput");
 const canvas = document.getElementById("canvas");
 const ctx = canvas.getContext("2d");
+let isOpenCVReady = false;
+
+document.getElementById('opencv-script').addEventListener('load', () => {
+    if (typeof cv !== 'undefined') {
+        cv['onRuntimeInitialized'] = () => {
+            isOpenCVReady = true;
+        };
+    }
+});
 
 imageInput.addEventListener("change", function(event) {
-
     const file = event.target.files[0];
+    if (!file) return;
 
-    if (!file) {
+    if (!isOpenCVReady && (typeof cv === 'undefined' || !cv.Mat)) {
+        alert("OpenCV.js is still loading. Please wait a moment and try again! 🫧");
         return;
     }
 
     const image = new Image();
 
     image.onload = function() {
-
         document.getElementById("loading").style.display = "block";
         document.getElementById("result").style.display = "none";
 
-        // Resize image
+        // Resize image for consistent algorithm scale
         const maxWidth = 900;
-
         let width = image.width;
         let height = image.height;
 
         if (width > maxWidth) {
-            height = height * maxWidth / width;
+            height = Math.round(height * maxWidth / width);
             width = maxWidth;
         }
 
         canvas.width = width;
         canvas.height = height;
-
         ctx.drawImage(image, 0, 0, width, height);
 
-        // Wait for OpenCV
-        setTimeout(() => {
-            countBubbles();
-        }, 1000);
+        requestAnimationFrame(() => {
+            setTimeout(countBubbles, 100);
+        });
     };
 
     image.src = URL.createObjectURL(file);
@@ -238,123 +226,97 @@ imageInput.addEventListener("change", function(event) {
 
 
 function countBubbles() {
+    let src = null, gray = null, blurred = null, thresh = null;
+    let contours = null, hierarchy = null, kernel = null;
 
     try {
+        src = cv.imread(canvas);
+        gray = new cv.Mat();
+        blurred = new cv.Mat();
+        thresh = new cv.Mat();
+        contours = new cv.MatVector();
+        hierarchy = new cv.Mat();
 
-        let src = cv.imread(canvas);
+        // 1. Convert to Grayscale
+        cv.cvtColor(src, gray, cv.COLOR_RGBA2GRAY);
 
-        // Convert to grayscale
-        let gray = new cv.Mat();
+        // 2. Reduce noise with Gaussian Blur
+        cv.GaussianBlur(gray, blurred, new cv.Size(5, 5), 0);
 
-        cv.cvtColor(
-            src,
-            gray,
-            cv.COLOR_RGBA2GRAY
+        // 3. Adaptive Thresholding to separate bubble edges from background lighting
+        cv.adaptiveThreshold(
+            blurred, 
+            thresh, 
+            255, 
+            cv.ADAPTIVE_THRESH_GAUSSIAN_C, 
+            cv.THRESH_BINARY_INV, 
+            11, 
+            2
         );
 
-        // Reduce noise
-        cv.GaussianBlur(
-            gray,
-            gray,
-            new cv.Size(9, 9),
-            2,
-            2,
-            cv.BORDER_DEFAULT
-        );
+        // 4. Morphological Closing to seal tiny gaps in bubble walls
+        kernel = cv.Mat.ones(3, 3, cv.CV_8U);
+        cv.morphologyEx(thresh, thresh, cv.MORPH_CLOSE, kernel);
 
-        // Detect circles
-        let circles = new cv.Mat();
+        // 5. Find Contours (Blobs)
+        cv.findContours(thresh, contours, hierarchy, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE);
 
-        cv.HoughCircles(
-            gray,
-            circles,
-            cv.HOUGH_GRADIENT,
-            1,
-            15,
-            100,
-            25,
-            5,
-            100
-        );
+        let bubbleCount = 0;
+        const minArea = 12;   // Filter out microscopic noise pixels
+        const maxArea = 8000; // Filter out gigantic background shapes
 
-        let count = circles.cols;
+        // 6. Draw Minimum Enclosing Circles around detected bubble contours
+        for (let i = 0; i < contours.size(); ++i) {
+            let contour = contours.get(i);
+            let area = cv.contourArea(contour);
 
-        // Draw detected circles
-        for (let i = 0; i < count; i++) {
+            if (area >= minArea && area <= maxArea) {
+                let circle = cv.minEnclosingCircle(contour);
+                
+                // Exclude extreme geometric anomalies
+                if (circle.radius >= 2 && circle.radius <= 70) {
+                    bubbleCount++;
 
-            let x = circles.data32F[i * 3];
-            let y = circles.data32F[i * 3 + 1];
-            let radius = circles.data32F[i * 3 + 2];
-
-            let center = new cv.Point(x, y);
-
-            cv.circle(
-                src,
-                center,
-                radius,
-                [0, 150, 255, 255],
-                2
-            );
-
-            cv.circle(
-                src,
-                center,
-                2,
-                [255, 0, 0, 255],
-                3
-            );
+                    // Outer circle boundary
+                    cv.circle(src, circle.center, circle.radius, [0, 150, 255, 255], 2);
+                    // Center point marker
+                    cv.circle(src, circle.center, 2, [255, 0, 0, 255], -1);
+                }
+            }
+            contour.delete();
         }
 
-        // Show processed image
+        // Render result back to canvas
         cv.imshow(canvas, src);
 
-        document.getElementById("bubbleCount").innerText = count;
-
-        document.getElementById("message").innerText =
-            getFunnyMessage(count);
-
+        document.getElementById("bubbleCount").innerText = bubbleCount;
+        document.getElementById("message").innerText = getFunnyMessage(bubbleCount);
         document.getElementById("loading").style.display = "none";
-
         document.getElementById("result").style.display = "block";
 
-        src.delete();
-        gray.delete();
-        circles.delete();
-
     } catch (error) {
-
-        console.error(error);
-
+        console.error("Bubble Detection Error:", error);
         document.getElementById("loading").style.display = "none";
-
-        alert(
-            "Oops! The bubbles have defeated our highly unnecessary technology. 🫧"
-        );
+        alert("Oops! The bubbles have defeated our highly unnecessary technology. 🫧");
+    } finally {
+        // Free memory allocations
+        if (src) src.delete();
+        if (gray) gray.delete();
+        if (blurred) blurred.delete();
+        if (thresh) thresh.delete();
+        if (contours) contours.delete();
+        if (hierarchy) hierarchy.delete();
+        if (kernel) kernel.delete();
     }
 }
-
 
 function getFunnyMessage(count) {
-
-    if (count === 0) {
-        return "No bubbles detected. This foam has chosen peace.";
-    }
-
-    if (count < 20) {
-        return "A surprisingly small amount of useless information.";
-    }
-
-    if (count < 100) {
-        return "Congratulations. You now know how many bubbles exist.";
-    }
-
-    if (count < 500) {
-        return "That's a lot of bubbles for something nobody asked for.";
-    }
-
+    if (count === 0) return "No bubbles detected. This foam has chosen peace.";
+    if (count < 20) return "A surprisingly small amount of useless information.";
+    if (count < 100) return "Congratulations. You now know how many bubbles exist.";
+    if (count < 500) return "That's a lot of bubbles for something nobody asked for.";
     return "Excellent. You have officially counted an unreasonable number of bubbles. 🫧";
 }
-
 </script>
 
 </body>
