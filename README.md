@@ -22,6 +22,21 @@ For Software:
 - HTML5, CSS3, JavaScript
 - Frameworks: React / Tailwind CSS
 - Tools: VS Code, Git, GitHub
+### Screenshot 1 – Project Development
+
+![Screenshot 1](images/img1.png.png)
+
+
+
+### Screenshot 2 – Project Interface
+
+![Screenshot 2](images/img2.png.png)
+
+
+
+### Screenshot 3 – Running Application
+
+![Screenshot 3](images/img3.png)
 
 ### Implementation
 For Software:
