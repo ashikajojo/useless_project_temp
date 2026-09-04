@@ -3,13 +3,26 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>komalaaa.com 🫧</title>
 
-    <title>Useless Bubble Counter 🫧</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
 
     <!-- OpenCV -->
     <script async id="opencv-script" src="https://docs.opencv.org/4.x/opencv.js"></script>
 
     <style>
+        :root {
+            --primary: #0088cc;
+            --primary-hover: #006699;
+            --bg-gradient: linear-gradient(135deg, #e0f2fe 0%, #f0f9ff 50%, #ffffff 100%);
+            --card-bg: rgba(255, 255, 255, 0.85);
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+        }
+
         * {
             box-sizing: border-box;
             margin: 0;
@@ -17,55 +30,76 @@
         }
 
         body {
-            font-family: Arial, sans-serif;
-            background: linear-gradient(135deg, #dff6ff, #ffffff);
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background: var(--bg-gradient);
             min-height: 100vh;
-            color: #17324d;
+            color: var(--text-main);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
         }
 
         header {
             text-align: center;
-            padding: 35px 20px 20px;
+            padding: 50px 20px 30px;
         }
 
         header h1 {
-            font-size: 42px;
-            margin-bottom: 10px;
+            font-size: 48px;
+            font-weight: 800;
+            letter-spacing: -1px;
+            margin-bottom: 8px;
+            background: linear-gradient(135deg, #0284c7, #0369a1);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
         }
 
         header p {
-            font-size: 17px;
-            color: #587083;
+            font-size: 18px;
+            color: var(--text-muted);
+            font-weight: 500;
         }
 
         .container {
             width: 90%;
-            max-width: 1000px;
-            margin: 20px auto;
+            max-width: 850px;
+            margin-bottom: 40px;
         }
 
         .card {
-            background: rgba(255, 255, 255, 0.9);
-            border-radius: 20px;
-            padding: 30px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+            background: var(--card-bg);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.6);
+            border-radius: 24px;
+            padding: 40px;
+            box-shadow: 0 20px 40px -15px rgba(14, 165, 233, 0.12);
             text-align: center;
         }
 
         .upload-box {
-            border: 3px dashed #6bc5e8;
-            border-radius: 18px;
+            border: 2px dashed #93c5fd;
+            background: rgba(240, 249, 255, 0.5);
+            border-radius: 20px;
             padding: 40px 20px;
-            margin-bottom: 25px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .upload-box:hover, .upload-box.dragover {
+            border-color: var(--primary);
+            background: rgba(224, 242, 254, 0.7);
+            transform: scale(1.01);
         }
 
         .upload-box h2 {
-            margin-bottom: 10px;
+            font-size: 22px;
+            margin-bottom: 8px;
         }
 
         .upload-box p {
-            color: #718696;
-            margin-bottom: 20px;
+            color: var(--text-muted);
+            font-size: 15px;
+            margin-bottom: 24px;
         }
 
         input[type="file"] {
@@ -73,60 +107,105 @@
         }
 
         .upload-btn {
-            display: inline-block;
-            background: #39a9dc;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: var(--primary);
             color: white;
-            padding: 13px 25px;
-            border-radius: 10px;
+            padding: 14px 28px;
+            border-radius: 12px;
             cursor: pointer;
-            font-weight: bold;
-            transition: background 0.2s ease;
+            font-weight: 700;
+            font-size: 15px;
+            box-shadow: 0 10px 20px -5px rgba(0, 136, 204, 0.4);
+            transition: all 0.2s ease;
         }
 
         .upload-btn:hover {
-            background: #218bbd;
-        }
-
-        .result {
-            display: none;
-            margin-top: 25px;
-        }
-
-        .count {
-            font-size: 70px;
-            font-weight: bold;
-            color: #1597c9;
-            margin: 15px 0;
-        }
-
-        .count-text {
-            font-size: 20px;
-        }
-
-        canvas {
-            max-width: 100%;
-            height: auto;
-            border-radius: 15px;
-            margin-top: 20px;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            background: var(--primary-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 12px 24px -5px rgba(0, 136, 204, 0.5);
         }
 
         .loading {
             display: none;
-            margin: 20px;
-            font-weight: bold;
+            margin: 30px 0;
+            font-weight: 600;
+            color: var(--primary);
+            font-size: 18px;
+        }
+
+        .result {
+            display: none;
+            margin-top: 35px;
+            animation: fadeIn 0.4s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .count-badge {
+            display: inline-block;
+            background: #e0f2fe;
+            padding: 20px 40px;
+            border-radius: 20px;
+            margin: 15px 0;
+        }
+
+        .count {
+            font-size: 72px;
+            font-weight: 800;
+            color: var(--primary);
+            line-height: 1;
+        }
+
+        .count-text {
+            font-size: 16px;
+            font-weight: 700;
+            color: #0369a1;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-top: 5px;
+        }
+
+        .funny-box {
+            margin-top: 20px;
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            padding: 16px 24px;
+            border-radius: 14px;
+            display: inline-block;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
         }
 
         .funny {
-            margin-top: 25px;
             font-style: italic;
-            color: #7a8c99;
+            color: #475569;
+            font-size: 15px;
+        }
+
+        .canvas-container {
+            margin-top: 25px;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            background: #0f172a;
+        }
+
+        canvas {
+            display: block;
+            max-width: 100%;
+            height: auto;
+            margin: 0 auto;
         }
 
         footer {
-            text-align: center;
+            margin-top: auto;
             padding: 30px;
-            color: #82919b;
+            color: var(--text-muted);
+            font-size: 14px;
         }
     </style>
 </head>
@@ -134,24 +213,19 @@
 <body>
 
     <header>
-        <h1>🫧 Useless Bubble Counter</h1>
+        <h1>🫧 komalaaa.com</h1>
         <p>Because someone had to count the bubbles.</p>
     </header>
 
     <div class="container">
         <div class="card">
-            <div class="upload-box">
+            <div class="upload-box" id="dropZone">
                 <h2>🔬 Analyze Your Soap Foam</h2>
-
-                <p>
-                    Upload a picture of soap foam and let our
-                    extremely unnecessary technology count the bubbles.
-                </p>
+                <p>Drag and drop an image here, or browse from your computer.</p>
 
                 <label for="imageInput" class="upload-btn">
                     📷 Upload Foam Image
                 </label>
-
                 <input type="file" id="imageInput" accept="image/*">
             </div>
 
@@ -160,11 +234,20 @@
             </div>
 
             <div class="result" id="result">
-                <h2>Bubble Count</h2>
-                <div class="count" id="bubbleCount">0</div>
-                <div class="count-text">bubbles detected 🫧</div>
-                <canvas id="canvas"></canvas>
-                <p class="funny" id="message"></p>
+                <div class="count-badge">
+                    <div class="count" id="bubbleCount">0</div>
+                    <div class="count-text">bubbles detected 🫧</div>
+                </div>
+
+                <br>
+
+                <div class="funny-box">
+                    <p class="funny" id="message"></p>
+                </div>
+
+                <div class="canvas-container">
+                    <canvas id="canvas"></canvas>
+                </div>
             </div>
         </div>
     </div>
@@ -175,6 +258,7 @@
 
 <script>
 const imageInput = document.getElementById("imageInput");
+const dropZone = document.getElementById("dropZone");
 const canvas = document.getElementById("canvas");
 const ctx = canvas.getContext("2d");
 let isOpenCVReady = false;
@@ -187,10 +271,38 @@ document.getElementById('opencv-script').addEventListener('load', () => {
     }
 });
 
+// Drag & Drop events
+dropZone.addEventListener("click", () => imageInput.click());
+
+['dragenter', 'dragover'].forEach(eventName => {
+    dropZone.addEventListener(eventName, (e) => {
+        e.preventDefault();
+        dropZone.classList.add('dragover');
+    }, false);
+});
+
+['dragleave', 'drop'].forEach(eventName => {
+    dropZone.addEventListener(eventName, (e) => {
+        e.preventDefault();
+        dropZone.classList.remove('dragover');
+    }, false);
+});
+
+dropZone.addEventListener('drop', (e) => {
+    const dt = e.dataTransfer;
+    const files = dt.files;
+    if (files.length > 0) {
+        imageInput.files = files;
+        handleImage(files[0]);
+    }
+});
+
 imageInput.addEventListener("change", function(event) {
     const file = event.target.files[0];
-    if (!file) return;
+    if (file) handleImage(file);
+});
 
+function handleImage(file) {
     if (!isOpenCVReady && (typeof cv === 'undefined' || !cv.Mat)) {
         alert("OpenCV.js is still loading. Please wait a moment and try again! 🫧");
         return;
@@ -202,7 +314,6 @@ imageInput.addEventListener("change", function(event) {
         document.getElementById("loading").style.display = "block";
         document.getElementById("result").style.display = "none";
 
-        // Resize image for consistent algorithm scale
         const maxWidth = 900;
         let width = image.width;
         let height = image.height;
@@ -222,8 +333,7 @@ imageInput.addEventListener("change", function(event) {
     };
 
     image.src = URL.createObjectURL(file);
-});
-
+}
 
 function countBubbles() {
     let src = null, gray = null, blurred = null, thresh = null;
@@ -237,13 +347,9 @@ function countBubbles() {
         contours = new cv.MatVector();
         hierarchy = new cv.Mat();
 
-        // 1. Convert to Grayscale
         cv.cvtColor(src, gray, cv.COLOR_RGBA2GRAY);
-
-        // 2. Reduce noise with Gaussian Blur
         cv.GaussianBlur(gray, blurred, new cv.Size(5, 5), 0);
 
-        // 3. Adaptive Thresholding to separate bubble edges from background lighting
         cv.adaptiveThreshold(
             blurred, 
             thresh, 
@@ -254,39 +360,29 @@ function countBubbles() {
             2
         );
 
-        // 4. Morphological Closing to seal tiny gaps in bubble walls
         kernel = cv.Mat.ones(3, 3, cv.CV_8U);
         cv.morphologyEx(thresh, thresh, cv.MORPH_CLOSE, kernel);
-
-        // 5. Find Contours (Blobs)
         cv.findContours(thresh, contours, hierarchy, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE);
 
         let bubbleCount = 0;
-        const minArea = 12;   // Filter out microscopic noise pixels
-        const maxArea = 8000; // Filter out gigantic background shapes
+        const minArea = 12;
+        const maxArea = 8000;
 
-        // 6. Draw Minimum Enclosing Circles around detected bubble contours
         for (let i = 0; i < contours.size(); ++i) {
             let contour = contours.get(i);
             let area = cv.contourArea(contour);
 
             if (area >= minArea && area <= maxArea) {
                 let circle = cv.minEnclosingCircle(contour);
-                
-                // Exclude extreme geometric anomalies
                 if (circle.radius >= 2 && circle.radius <= 70) {
                     bubbleCount++;
-
-                    // Outer circle boundary
-                    cv.circle(src, circle.center, circle.radius, [0, 150, 255, 255], 2);
-                    // Center point marker
-                    cv.circle(src, circle.center, 2, [255, 0, 0, 255], -1);
+                    cv.circle(src, circle.center, circle.radius, [0, 180, 255, 255], 2);
+                    cv.circle(src, circle.center, 2, [255, 50, 50, 255], -1);
                 }
             }
             contour.delete();
         }
 
-        // Render result back to canvas
         cv.imshow(canvas, src);
 
         document.getElementById("bubbleCount").innerText = bubbleCount;
@@ -297,9 +393,8 @@ function countBubbles() {
     } catch (error) {
         console.error("Bubble Detection Error:", error);
         document.getElementById("loading").style.display = "none";
-        alert("Oops! The bubbles have defeated our highly unnecessary technology. 🫧");
+        alert("Oops! The bubbles have defeated our technology. 🫧");
     } finally {
-        // Free memory allocations
         if (src) src.delete();
         if (gray) gray.delete();
         if (blurred) blurred.delete();
