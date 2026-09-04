@@ -36,7 +36,7 @@ For Software:
 
 ### Screenshot 3 – Running Application
 
-![Screenshot 3](images/img3.png)
+![Screenshot 3](images/img3.png.png)
 
 ### Implementation
 For Software:
